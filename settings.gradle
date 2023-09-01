@@ -1,2 +1,5 @@
 rootProject.name = 'cqrs--ex1'
 
+include('product-command-service')
+include('product-query-service')
+
