@@ -24,17 +24,12 @@ public class ProductQueryController {
         return ResponseEntity.ok(productQueryService.getAllProducts());
     }
 
-    @GetMapping("/{id}")
-    public ResponseEntity<Product> getProductById(@PathVariable Long id) {
-        return ResponseEntity.ok(productQueryService.getProductById(id));
-    }
-
     @GetMapping("/{sku}")
     public ResponseEntity<Product> getProductBySku(@PathVariable String sku) {
         return ResponseEntity.ok(productQueryService.getProductBySku(sku));
     }
 
-    @GetMapping
+    @GetMapping("/query")
     public ResponseEntity<List<Product>> getProductByName(@RequestParam String name) {
         return ResponseEntity.ok(productQueryService.getProductByName(name));
     }

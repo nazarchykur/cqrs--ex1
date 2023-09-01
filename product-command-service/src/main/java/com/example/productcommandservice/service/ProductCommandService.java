@@ -1,9 +1,12 @@
 package com.example.productcommandservice.service;
 
+import com.example.productcommandservice.dto.ProductEvent;
+import com.example.productcommandservice.dto.ProductEventType;
 import com.example.productcommandservice.entity.Product;
 import com.example.productcommandservice.repository.ProductRepository;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -12,9 +15,12 @@ import org.springframework.transaction.annotation.Transactional;
 public class ProductCommandService {
 
     private final ProductRepository productRepository;
+    private final KafkaTemplate<String, Object> kafkaTemplate;
 
     public Product createProduct(Product product) {
-        return productRepository.save(product);
+        Product savedProduct = productRepository.save(product);
+        kafkaTemplate.send("product-event-topic", new ProductEvent(ProductEventType.CREATED, savedProduct));
+        return savedProduct;
     }
 
     @Transactional
@@ -25,6 +31,8 @@ public class ProductCommandService {
         existingProduct.setName(product.getName());
         existingProduct.setDescription(product.getDescription());
         existingProduct.setPrice(product.getPrice());
+        Product updatedProduct = productRepository.save(existingProduct);
+        kafkaTemplate.send("product-event-topic", new ProductEvent(ProductEventType.UPDATED, updatedProduct));
 
         return existingProduct;
     }
@@ -34,5 +42,6 @@ public class ProductCommandService {
         Product existingProduct = productRepository.findBySku(sku)
                 .orElseThrow(() -> new EntityNotFoundException("Product not found with sku: " + sku));
         productRepository.delete(existingProduct);
+        kafkaTemplate.send("product-event-topic", new ProductEvent(ProductEventType.DELETED, existingProduct));
     }
 }
